@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: gearify-web
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: gearify-dev
+            autoSync: true
+          # - env: staging
+          #   namespace: gearify-staging
+          #   autoSync: true
+          # - env: prod
+          #   namespace: gearify-prod
+          #   autoSync: false
+
+  template:
+    metadata:
+      name: 'web-{{env}}'
+      labels:
+        app.kubernetes.io/name: web
+        environment: '{{env}}'
+    spec:
+      project: gearify-apps
+      source:
+        repoURL: https://github.com/your-org/gearify-gitops.git
+        targetRevision: HEAD
+        path: apps/overlays/{{env}}/web
+        helm:
+          valueFiles:
+            - values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

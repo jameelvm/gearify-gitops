@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-system
+  labels:
+    name: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aws-load-balancer-controller
+  namespace: kube-system
+  annotations:
+    eks.amazonaws.com/role-arn: ${AWS_LB_CONTROLLER_ROLE_ARN}
+---
+# Note: Install via Helm for full functionality
+# helm repo add eks https://aws.github.io/eks-charts
+# helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+#   -n kube-system \
+#   --set clusterName=gearify-dev \
+#   --set serviceAccount.create=false \
+#   --set serviceAccount.name=aws-load-balancer-controller

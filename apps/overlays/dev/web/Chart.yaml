@@ -1,0 +1,11 @@
+apiVersion: v2
+name: web
+description: Gearify Web Application - Dev Environment
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: gearify-service
+    version: "1.0.0"
+    repository: "file://../../../../charts/gearify-service"

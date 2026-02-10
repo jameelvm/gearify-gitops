@@ -1,0 +1,71 @@
+# Catalog Service base values
+gearify-service:
+  nameOverride: catalog-svc
+
+  image:
+    repository: ""  # Set by environment overlay
+    tag: "latest"
+
+  service:
+    port: 80
+    targetPort: 5001
+
+  configMap:
+    enabled: true
+    data:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      AWS_REGION: "us-east-1"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability:4317"
+
+  externalSecrets:
+    enabled: true
+    refreshInterval: 1h
+    secretStoreRef:
+      name: aws-secrets-manager
+      kind: ClusterSecretStore
+    data:
+      - secretKey: AWS_ACCESS_KEY_ID
+        remoteRef:
+          key: gearify/dev/service-credentials
+          property: access_key_id
+      - secretKey: AWS_SECRET_ACCESS_KEY
+        remoteRef:
+          key: gearify/dev/service-credentials
+          property: secret_access_key
+      - secretKey: REDIS_CONNECTION_STRING
+        remoteRef:
+          key: gearify/dev/redis
+          property: connection_string
+
+  env:
+    - name: SERVICE_NAME
+      value: "catalog-svc"
+
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health/ready
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    path: /metrics

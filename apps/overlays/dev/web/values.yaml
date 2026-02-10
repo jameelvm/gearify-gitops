@@ -1,0 +1,68 @@
+# Web Application - Dev Environment values
+gearify-service:
+  nameOverride: web
+
+  image:
+    repository: "${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/gearify-web"
+    tag: "dev-latest"
+
+  replicaCount: 1
+
+  service:
+    port: 80
+    targetPort: 80
+
+  ingress:
+    enabled: true
+    className: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/healthcheck-path: /
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    hosts:
+      - host: dev.gearify.com
+        paths:
+          - path: /
+            pathType: Prefix
+
+  configMap:
+    enabled: true
+    data:
+      API_BASE_URL: "http://api.dev.gearify.com"
+
+  env:
+    - name: ENVIRONMENT
+      value: "dev"
+
+  # Web app doesn't need external secrets
+  externalSecrets:
+    enabled: false
+
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  # Nginx serves static files, so health checks are simple
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+  serviceMonitor:
+    enabled: false

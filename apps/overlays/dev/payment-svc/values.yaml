@@ -1,0 +1,63 @@
+# Payment Service - Dev Environment values
+gearify-service:
+  nameOverride: payment-svc
+
+  image:
+    repository: "${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/gearify-payment-svc"
+    tag: "dev-latest"
+
+  replicaCount: 1
+
+  service:
+    port: 80
+    targetPort: 5015
+
+  configMap:
+    enabled: true
+    data:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      AWS_REGION: "us-east-1"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability-dev:4317"
+      SNS_PAYMENT_EVENTS_TOPIC: "arn:aws:sns:us-east-1:${AWS_ACCOUNT_ID}:gearify-payment-events-dev"
+      SQS_ORDER_CREATED_QUEUE: "https://sqs.us-east-1.amazonaws.com/${AWS_ACCOUNT_ID}/gearify-order-created-queue-dev"
+      SQS_ORDER_CANCELLED_QUEUE: "https://sqs.us-east-1.amazonaws.com/${AWS_ACCOUNT_ID}/gearify-order-cancelled-queue-dev"
+
+  externalSecrets:
+    enabled: true
+    refreshInterval: 1h
+    secretStoreRef:
+      name: aws-secrets-manager
+      kind: ClusterSecretStore
+    data:
+      - secretKey: POSTGRES_CONNECTION_STRING
+        remoteRef:
+          key: gearify/dev/database/main
+          property: payments_connection
+      - secretKey: STRIPE_API_KEY
+        remoteRef:
+          key: gearify/dev/stripe
+          property: api_key
+      - secretKey: STRIPE_WEBHOOK_SECRET
+        remoteRef:
+          key: gearify/dev/stripe
+          property: webhook_secret
+
+  env:
+    - name: SERVICE_NAME
+      value: "payment-svc"
+    - name: ENVIRONMENT
+      value: "dev"
+
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  serviceMonitor:
+    enabled: true
+    namespace: observability-dev
+    interval: 30s
+    path: /metrics

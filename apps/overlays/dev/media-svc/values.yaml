@@ -1,0 +1,47 @@
+# Media Service - Dev Environment values
+gearify-service:
+  nameOverride: media-svc
+
+  image:
+    repository: "${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/gearify-media-svc"
+    tag: "dev-latest"
+
+  replicaCount: 1
+
+  service:
+    port: 80
+    targetPort: 5009
+
+  configMap:
+    enabled: true
+    data:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      AWS_REGION: "us-east-1"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability-dev:4317"
+      S3_BUCKET_PRODUCT_IMAGES: "gearify-product-images-dev-${AWS_ACCOUNT_ID}"
+      S3_BUCKET_TENANT_ASSETS: "gearify-tenant-assets-dev-${AWS_ACCOUNT_ID}"
+      SNS_MEDIA_UPLOAD_TOPIC: "arn:aws:sns:us-east-1:${AWS_ACCOUNT_ID}:gearify-media-upload-events-dev"
+      SNS_IMAGE_PROCESSED_TOPIC: "arn:aws:sns:us-east-1:${AWS_ACCOUNT_ID}:gearify-image-processing-completed-dev"
+      SQS_IMAGE_PROCESSING_QUEUE: "https://sqs.us-east-1.amazonaws.com/${AWS_ACCOUNT_ID}/gearify-image-processing-queue-dev"
+      DYNAMODB_TABLE_PREFIX: "gearify-"
+      DYNAMODB_TABLE_SUFFIX: "-dev"
+
+  env:
+    - name: SERVICE_NAME
+      value: "media-svc"
+    - name: ENVIRONMENT
+      value: "dev"
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  serviceMonitor:
+    enabled: true
+    namespace: observability-dev
+    interval: 30s
+    path: /metrics

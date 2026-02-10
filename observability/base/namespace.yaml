@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability-dev
+  labels:
+    app.kubernetes.io/name: observability
+    environment: dev

@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: gearify-infrastructure
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Gearify cluster-wide infrastructure resources
+
+  sourceRepos:
+    - 'https://github.com/your-org/gearify-gitops.git'
+
+  # Infrastructure can deploy to any namespace
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+
+  # Allow cluster-scoped resources for infrastructure
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: ''
+      kind: ClusterRole
+    - group: ''
+      kind: ClusterRoleBinding
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: external-secrets.io
+      kind: ClusterSecretStore
+    - group: networking.k8s.io
+      kind: IngressClass
+
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  roles:
+    - name: admin
+      description: Infrastructure admin access
+      policies:
+        - p, proj:gearify-infrastructure:admin, applications, *, gearify-infrastructure/*, allow
+      groups:
+        - gearify-admins

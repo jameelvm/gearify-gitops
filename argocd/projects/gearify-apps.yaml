@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: gearify-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Gearify microservice applications
+
+  # Allow manifests to deploy from this Git repo
+  sourceRepos:
+    - 'https://github.com/your-org/gearify-gitops.git'
+
+  # Only permit applications to deploy to these namespaces
+  destinations:
+    - namespace: gearify-dev
+      server: https://kubernetes.default.svc
+    - namespace: gearify-staging
+      server: https://kubernetes.default.svc
+    - namespace: gearify-prod
+      server: https://kubernetes.default.svc
+
+  # Deny all cluster-scoped resources from being created
+  clusterResourceWhitelist: []
+
+  # Allow all namespaced resources
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Roles for access control
+  roles:
+    - name: developer
+      description: Developer access to dev environment
+      policies:
+        - p, proj:gearify-apps:developer, applications, get, gearify-apps/*, allow
+        - p, proj:gearify-apps:developer, applications, sync, gearify-apps/*-dev, allow
+      groups:
+        - gearify-developers
+
+    - name: deployer
+      description: Full access to all environments
+      policies:
+        - p, proj:gearify-apps:deployer, applications, *, gearify-apps/*, allow
+      groups:
+        - gearify-deployers

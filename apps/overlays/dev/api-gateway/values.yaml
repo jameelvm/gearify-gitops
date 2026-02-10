@@ -1,0 +1,89 @@
+# API Gateway - Dev Environment values
+gearify-service:
+  nameOverride: api-gateway
+
+  image:
+    repository: "${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/gearify-api-gateway"
+    tag: "dev-latest"
+
+  replicaCount: 1
+
+  service:
+    port: 80
+    targetPort: 8080
+
+  ingress:
+    enabled: true
+    className: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/healthcheck-path: /health
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    hosts:
+      - host: api.dev.gearify.com
+        paths:
+          - path: /
+            pathType: Prefix
+
+  configMap:
+    enabled: true
+    data:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      AWS_REGION: "us-east-1"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability-dev:4317"
+      # Service URLs for YARP routing
+      TENANT_SVC_URL: "http://tenant-svc.gearify-dev.svc.cluster.local"
+      CATALOG_SVC_URL: "http://catalog-svc.gearify-dev.svc.cluster.local"
+      AUTH_SVC_URL: "http://auth-svc.gearify-dev.svc.cluster.local"
+      SEARCH_SVC_URL: "http://search-svc.gearify-dev.svc.cluster.local"
+      CART_SVC_URL: "http://cart-svc.gearify-dev.svc.cluster.local"
+      ORDER_SVC_URL: "http://order-svc.gearify-dev.svc.cluster.local"
+      PAYMENT_SVC_URL: "http://payment-svc.gearify-dev.svc.cluster.local"
+      SHIPPING_SVC_URL: "http://shipping-svc.gearify-dev.svc.cluster.local"
+      INVENTORY_SVC_URL: "http://inventory-svc.gearify-dev.svc.cluster.local"
+      MEDIA_SVC_URL: "http://media-svc.gearify-dev.svc.cluster.local"
+      NOTIFICATION_SVC_URL: "http://notification-svc.gearify-dev.svc.cluster.local"
+
+  externalSecrets:
+    enabled: true
+    refreshInterval: 1h
+    secretStoreRef:
+      name: aws-secrets-manager
+      kind: ClusterSecretStore
+    data:
+      - secretKey: JWT_SECRET
+        remoteRef:
+          key: gearify/dev/jwt
+          property: secret
+      - secretKey: JWT_ISSUER
+        remoteRef:
+          key: gearify/dev/jwt
+          property: issuer
+      - secretKey: JWT_AUDIENCE
+        remoteRef:
+          key: gearify/dev/jwt
+          property: audience
+
+  env:
+    - name: SERVICE_NAME
+      value: "api-gateway"
+    - name: ENVIRONMENT
+      value: "dev"
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  autoscaling:
+    enabled: false
+
+  serviceMonitor:
+    enabled: true
+    namespace: observability-dev
+    interval: 30s
+    path: /metrics

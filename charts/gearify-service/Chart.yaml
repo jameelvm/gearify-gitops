@@ -1,0 +1,9 @@
+apiVersion: v2
+name: gearify-service
+description: Base Helm chart for Gearify microservices
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Gearify Team
+    email: team@gearify.com

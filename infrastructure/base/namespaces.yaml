@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gearify-dev
+  labels:
+    environment: dev
+    app.kubernetes.io/part-of: gearify
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability-dev
+  labels:
+    environment: dev
+    app.kubernetes.io/part-of: gearify
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-secrets
+  labels:
+    app.kubernetes.io/part-of: gearify

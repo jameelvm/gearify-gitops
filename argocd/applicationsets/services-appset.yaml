@@ -1,0 +1,89 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: gearify-services
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          # Environment generator
+          - list:
+              elements:
+                - env: dev
+                  namespace: gearify-dev
+                  autoSync: true
+                  autoPrune: true
+                  selfHeal: true
+                # Uncomment when ready for staging/prod
+                # - env: staging
+                #   namespace: gearify-staging
+                #   autoSync: true
+                #   autoPrune: true
+                #   selfHeal: true
+                # - env: prod
+                #   namespace: gearify-prod
+                #   autoSync: false
+                #   autoPrune: false
+                #   selfHeal: false
+
+          # Service generator
+          - list:
+              elements:
+                - service: tenant-svc
+                  port: 5008
+                - service: catalog-svc
+                  port: 5001
+                - service: auth-svc
+                  port: 5011
+                - service: search-svc
+                  port: 5012
+                - service: cart-svc
+                  port: 5013
+                - service: order-svc
+                  port: 5014
+                - service: payment-svc
+                  port: 5015
+                - service: shipping-svc
+                  port: 5006
+                - service: inventory-svc
+                  port: 5007
+                - service: media-svc
+                  port: 5009
+                - service: notification-svc
+                  port: 5010
+                - service: api-gateway
+                  port: 8080
+
+  template:
+    metadata:
+      name: '{{service}}-{{env}}'
+      labels:
+        app.kubernetes.io/name: '{{service}}'
+        environment: '{{env}}'
+    spec:
+      project: gearify-apps
+      source:
+        repoURL: https://github.com/your-org/gearify-gitops.git
+        targetRevision: HEAD
+        path: apps/overlays/{{env}}/{{service}}
+        helm:
+          valueFiles:
+            - values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: '{{autoPrune}}'
+          selfHeal: '{{selfHeal}}'
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+          - ApplyOutOfSyncOnly=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m

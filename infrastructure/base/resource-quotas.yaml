@@ -1,0 +1,30 @@
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: gearify-dev-quota
+  namespace: gearify-dev
+spec:
+  hard:
+    requests.cpu: "10"
+    requests.memory: "20Gi"
+    limits.cpu: "20"
+    limits.memory: "40Gi"
+    persistentvolumeclaims: "20"
+    pods: "100"
+    services: "50"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: gearify-dev-limits
+  namespace: gearify-dev
+spec:
+  limits:
+    - default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container
